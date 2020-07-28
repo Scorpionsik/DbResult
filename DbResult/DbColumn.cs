@@ -73,7 +73,7 @@ namespace System.Data.Common
         {
             get
             {
-                return new DbValue(this.ColumnType, this.Values[row]);
+                return new DbValue(this.ColumnType, this.Values[row], row, this.ColumnName);
             }
         }
 
@@ -92,7 +92,7 @@ namespace System.Data.Common
 
         public DbValue GetValue(int row)
         {
-            return new DbValue(this.ColumnType, this.Values[row]);
+            return new DbValue(this.ColumnType, this.Values[row], row, this.ColumnName);
         }
     }
 }

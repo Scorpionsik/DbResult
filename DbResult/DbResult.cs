@@ -237,7 +237,7 @@ namespace System.Data.Common
         /// <returns>Элемент таблицы.</returns>
         public DbValue GetValue(int column, int row)
         {
-            return new DbValue(this.ColumnTypes[column], this.Rows[row][column]);
+            return new DbValue(this.ColumnTypes[column], this.Rows[row][column], row, this.columns[column]);
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace System.Data.Common
         public DbValue GetValue(string column_name, int row)
         {
             int column = this.columns.IndexOf(column_name);
-            return new DbValue(this.ColumnTypes[column], this.Rows[row][column]);
+            return new DbValue(this.ColumnTypes[column], this.Rows[row][column], row, column_name);
         }
 
         /// <summary>

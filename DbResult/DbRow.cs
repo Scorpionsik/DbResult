@@ -108,13 +108,13 @@ namespace System.Data.Common
 
         public DbValue GetValue(int column)
         {
-            return new DbValue(this.ColumnTypes[column], this.Values[column]);
+            return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, this.column[column]);
         }
 
         public DbValue GetValue(string column_name)
         {
             int column = this.column.IndexOf(column_name);
-            return new DbValue(this.ColumnTypes[column], this.Values[column]);
+            return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, column_name);
         }
 
         public Type GetColumnType(int column)

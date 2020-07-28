@@ -5,6 +5,10 @@
     /// </summary>
     public struct DbValue
     {
+        public int RowIndex { get; private set; }
+
+        public string ColumnName { get; private set; }
+
         /// <summary>
         /// Тип данных для этого элемента.
         /// </summary>
@@ -20,8 +24,10 @@
         /// </summary>
         /// <param name="type"></param>
         /// <param name="obj"></param>
-        internal DbValue(Type type, object obj)
+        internal DbValue(Type type, object obj, int row, string column)
         {
+            this.RowIndex = row;
+            this.ColumnName = column;
             this.TypeValue = type;
             this.Value = obj;
         }
