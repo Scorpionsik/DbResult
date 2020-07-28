@@ -7,7 +7,11 @@ namespace System.Data.Common
     {
         public int RowIndex { get; private set; }
 
-        public List<string> Columns { get; private set; }
+        private List<string> column;
+        public string[] Column
+        {
+            get => this.column.ToArray();
+        }
         private List<Type> ColumnTypes;
         private List<object> Values;
 
@@ -86,7 +90,7 @@ namespace System.Data.Common
         {
             this.index = -1;
             this.RowIndex = row_index;
-            this.Columns = new List<string>(columns);
+            this.column = new List<string>(columns);
             this.Values = new List<object>(values);
             this.ColumnTypes = new List<Type>(columnTypes);
         }
@@ -96,9 +100,9 @@ namespace System.Data.Common
             return this.Values[column];
         }
 
-        public object getObject(string column_name)
+        public object GetObject(string column_name)
         {
-            int column = this.Columns.IndexOf(column_name);
+            int column = this.column.IndexOf(column_name);
             return this.Values[column];
         }
 
@@ -109,7 +113,7 @@ namespace System.Data.Common
 
         public DbValue GetValue(string column_name)
         {
-            int column = this.Columns.IndexOf(column_name);
+            int column = this.column.IndexOf(column_name);
             return new DbValue(this.ColumnTypes[column], this.Values[column]);
         }
 
@@ -120,7 +124,7 @@ namespace System.Data.Common
 
         public Type GetColumnType(string column_name)
         {
-            int column = this.Columns.IndexOf(column_name);
+            int column = this.column.IndexOf(column_name);
             return this.ColumnTypes[column];
         }
     }

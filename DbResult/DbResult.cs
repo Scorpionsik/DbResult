@@ -9,10 +9,14 @@ namespace System.Data.Common
     /// </summary>
     public class DbResult : IEnumerable<DbRow>, IEnumerator<DbRow>
     {
+        private List<string> columns;
         /// <summary>
         /// Названия столбцов таблицы.
         /// </summary>
-        public List<string> Columns { get; private set; }
+        public string[] Columns
+        {
+            get => this.columns.ToArray();
+        }
 
         /// <summary>
         /// Типы данных в столбцах таблицы.
@@ -158,6 +162,11 @@ namespace System.Data.Common
             get => this.Rows.Count;
         }
 
+        public int ColumnsCount
+        {
+            get => this.columns.Count;
+        }
+
         /// <summary>
         /// Есть ли в таблице хотя бы 1 строка; true, если есть.
         /// </summary>
@@ -174,7 +183,7 @@ namespace System.Data.Common
         public DbResult(DbDataReader data, bool closeData = true)
         {
             this.ColumnTypes = new List<Type>();
-            this.Columns = new List<string>();
+            this.columns = new List<string>();
             this.Rows = new List<List<object>>();
             if (data.HasRows)
             {
@@ -184,9 +193,9 @@ namespace System.Data.Common
                     int countCols = data.FieldCount;
                     for (int i = 0; i < countCols; i++)
                     {
-                        if(this.Columns.Count < countCols)
+                        if(this.ColumnsCount < countCols)
                         {
-                            this.Columns.Add(data.GetName(i));
+                            this.columns.Add(data.GetName(i));
                             this.ColumnTypes.Add(data.GetFieldType(i));
                         }
                         tmp_row.Add(data.GetValue(i));
@@ -216,7 +225,7 @@ namespace System.Data.Common
         /// <returns>Элемент таблицы.</returns>
         public object GetObject(string column_name, int row)
         {
-            int column = this.Columns.IndexOf(column_name);
+            int column = this.columns.IndexOf(column_name);
             return this.Rows[row][column];
         }
 
@@ -239,7 +248,7 @@ namespace System.Data.Common
         /// <returns>Элемент таблицы.</returns>
         public DbValue GetValue(string column_name, int row)
         {
-            int column = this.Columns.IndexOf(column_name);
+            int column = this.columns.IndexOf(column_name);
             return new DbValue(this.ColumnTypes[column], this.Rows[row][column]);
         }
 
@@ -277,7 +286,7 @@ namespace System.Data.Common
         /// <returns>Коллекция элементов таблицы <see cref="DbColumn"/>.</returns>
         public DbColumn GetColumn(string column_name)
         {
-            int tmp_col_index = this.Columns.IndexOf(column_name);
+            int tmp_col_index = this.columns.IndexOf(column_name);
             Type type = this.GetColumnType(tmp_col_index);
             List<object> tmp_values = new List<object>();
             foreach(List<object> tmp_row in this.Rows)
@@ -304,7 +313,7 @@ namespace System.Data.Common
         /// <returns>Тип данных выбранного столбца.</returns>
         public Type GetColumnType(string column_name)
         {
-            int column = this.Columns.IndexOf(column_name);
+            int column = this.columns.IndexOf(column_name);
             return this.ColumnTypes[column];
         }
     }
