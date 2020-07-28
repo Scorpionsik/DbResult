@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace System.Data.Common
 {
-    public class DbRow : IEnumerable<DbValue>, IEnumerator<DbValue>
+    public struct DbRow : IEnumerable<DbValue>, IEnumerator<DbValue>
     {
         public int RowIndex { get; private set; }
 
@@ -25,7 +25,7 @@ namespace System.Data.Common
         #endregion
 
         #region IEnumerator
-        private int index = -1;
+        private int index;
 
         public bool MoveNext()
         {
@@ -84,6 +84,7 @@ namespace System.Data.Common
 
         internal DbRow(int row_index, IEnumerable<object> values, IEnumerable<string> columns, IEnumerable<Type> columnTypes)
         {
+            this.index = -1;
             this.RowIndex = row_index;
             this.Columns = new List<string>(columns);
             this.Values = new List<object>(values);

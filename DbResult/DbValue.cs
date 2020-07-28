@@ -1,10 +1,25 @@
 ﻿namespace System.Data.Common
 {
+    /// <summary>
+    /// Элемент таблицы.
+    /// </summary>
     public struct DbValue
     {
+        /// <summary>
+        /// Тип данных для этого элемента.
+        /// </summary>
         public Type TypeValue { get; private set; }
+
+        /// <summary>
+        /// Значение, указанное в этом элементе.
+        /// </summary>
         public object Value { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="obj"></param>
         internal DbValue(Type type, object obj)
         {
             this.TypeValue = type;
