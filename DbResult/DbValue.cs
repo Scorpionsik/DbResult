@@ -34,29 +34,29 @@
 
         public int ToInt32()
         {
-            if (this.TypeValue == typeof(int) || this.TypeValue == typeof(Int32))
-            {
+            //if (this.TypeValue == typeof(int) || this.TypeValue == typeof(Int32))
+            //{
                 return Convert.ToInt32(this.Value);
-            }
-            else throw new Exception("Not Int32");
+            //}
+            //else throw new Exception("Not Int32");
         }
 
         public double ToDouble()
         {
-            if (this.TypeValue == typeof(double) || this.TypeValue == typeof(Double))
-            {
+            //if (this.TypeValue == typeof(double) || this.TypeValue == typeof(Double))
+            //{
                 return Convert.ToDouble(this.Value);
-            }
-            else throw new Exception("Not Double");
+            //}
+            //else throw new Exception("Not Double");
         }
 
         public bool ToBoolean()
         {
-            if (this.TypeValue == typeof(bool) || this.TypeValue == typeof(SByte))
-            {
+            //if (this.TypeValue == typeof(bool) || this.TypeValue == typeof(SByte))
+            //{
                 return Convert.ToBoolean(this.Value);
-            }
-            else throw new Exception("Not Boolean");
+            //}
+            //else throw new Exception("Not Boolean");
         }
 
         public override string ToString()

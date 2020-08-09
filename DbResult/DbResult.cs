@@ -206,6 +206,13 @@ namespace System.Data.Common
             if(closeData) data.Close();
         }
 
+        private DbResult(IEnumerable<string> columns, IEnumerable<Type> columnTypes, IEnumerable<List<object>> rows)
+        {
+            this.columns = new List<string>(columns);
+            this.ColumnTypes = new List<Type>(columnTypes);
+            this.Rows = new List<List<object>>(rows);
+        }
+
         /// <summary>
         /// Получает элемент таблицы по номеру столбца и номеру строки.
         /// </summary>
@@ -316,5 +323,7 @@ namespace System.Data.Common
             int column = this.columns.IndexOf(column_name);
             return this.ColumnTypes[column];
         }
+
+    
     }
 }
