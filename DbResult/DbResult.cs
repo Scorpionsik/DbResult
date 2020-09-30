@@ -224,6 +224,36 @@ namespace System.Data.Common
             return this.Rows[row][column];
         }
 
+        public int GetInt32(int column, int row)
+        {
+            return Convert.ToInt32(this.GetObject(column, row));
+        }
+
+        public int GetInt32(string column_name, int row)
+        {
+            return Convert.ToInt32(this.GetObject(column_name, row));
+        }
+
+        public double GetDouble(int column, int row)
+        {
+            return Convert.ToDouble(this.GetObject(column, row));
+        }
+
+        public double GetDouble(string column_name, int row)
+        {
+            return Convert.ToDouble(this.GetObject(column_name, row));
+        }
+
+        public bool GetBoolean(int column, int row)
+        {
+            return Convert.ToBoolean(this.GetObject(column, row));
+        }
+
+        public bool GetBoolean(string column_name, int row)
+        {
+            return Convert.ToBoolean(this.GetObject(column_name, row));
+        }
+
         /// <summary>
         /// Получает элемент таблицы по названию столбца и номеру строки.
         /// </summary>
