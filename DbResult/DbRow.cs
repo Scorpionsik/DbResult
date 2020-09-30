@@ -106,6 +106,36 @@ namespace System.Data.Common
             return this.Values[column];
         }
 
+        public int GetInt32(int column)
+        {
+            return Convert.ToInt32(this.GetObject(column));
+        }
+
+        public int GetInt32(string column_name)
+        {
+            return Convert.ToInt32(this.GetObject(column_name));
+        }
+
+        public double GetDouble(int column)
+        {
+            return Convert.ToDouble(this.GetObject(column));
+        }
+
+        public double GetDouble(string column_name)
+        {
+            return Convert.ToDouble(this.GetObject(column_name));
+        }
+
+        public bool GetBoolean(int column)
+        {
+            return Convert.ToBoolean(this.GetObject(column));
+        }
+
+        public bool GetBoolean(string column_name)
+        {
+            return Convert.ToBoolean(this.GetObject(column_name));
+        }
+
         public DbValue GetValue(int column)
         {
             return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, this.column[column]);
