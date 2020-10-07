@@ -7,26 +7,29 @@ namespace System.Data.Common
     /// <summary>
     /// Объект-таблица, сформированная из полученных данных.
     /// </summary>
-    public class DbResult : IEnumerable<DbRow>, IEnumerator<DbRow>
+    public struct DbResult : IEnumerable<DbRow>, IEnumerator<DbRow>
     {
-        private List<string> columns;
+        public static DbResult Empty { get; private set; }
+
+        static DbResult()
+        {
+            Empty = new DbResult();
+        }
+
         /// <summary>
         /// Названия столбцов таблицы.
         /// </summary>
-        public string[] Columns
-        {
-            get => this.columns.ToArray();
-        }
+        public string[] Columns { get; private set; }
 
         /// <summary>
         /// Типы данных в столбцах таблицы.
         /// </summary>
-        private List<Type> ColumnTypes;
+        public Type[] ColumnTypes { get; private set; }
 
         /// <summary>
         /// Коллекция строк таблицы.
         /// </summary>
-        private List<List<object>> Rows;
+        private List<object[]> Rows;
 
         #region IEnumerable
 
@@ -50,7 +53,7 @@ namespace System.Data.Common
         #endregion
 
         #region IEnumerator
-        private int index = -1;
+        private int index;
 
         /// <summary>
         /// Перемещает перечислитель к следующему элементу коллекции строк таблицы.
@@ -107,32 +110,28 @@ namespace System.Data.Common
         #endregion
 
         /// <summary>
-        /// Возвращает элемент таблицы в формате <see cref="DbValue"/> по номеру столбца и номеру строки.
-        /// </summary>
-        /// <param name="column">Номер столбца.</param>
-        /// <param name="row">Номер строки.</param>
-        /// <returns>Элемент таблицы.</returns>
-        public DbValue this[int column, int row]
-        {
-            get => this.GetValue(column, row);
-        }
-
-        /// <summary>
         /// Возвращает элемент таблицы в формате <see cref="DbValue"/> по названию столбца и номеру строки.
         /// </summary>
         /// <param name="column_name">Название столбца.</param>
         /// <param name="row">Номер строки.</param>
         /// <returns>Элемент таблицы.</returns>
-        public DbValue this[string column_name, int row]
+        public object this[string column_name, int row]
         {
-            get => this.GetValue(column_name, row);
+            get => this.GetObject(column_name, row);
         }
 
         /// <summary>
-        /// Возвращает все элементы по номеру строки.
+        /// Возвращает элемент таблицы в формате <see cref="DbValue"/> по номеру столбца и номеру строки.
         /// </summary>
+        /// <param name="column">Номер столбца.</param>
         /// <param name="row">Номер строки.</param>
-        /// <returns>Коллекция элементов таблицы <see cref="DbRow"/>.</returns>
+        /// <returns>Элемент таблицы.</returns>
+        public object this[int column, int row]
+        {
+            get => this.GetObject(column, row);
+        }
+
+        /*
         public DbRow this[int row]
         {
             get
@@ -141,11 +140,6 @@ namespace System.Data.Common
             }
         }
 
-        /// <summary>
-        /// Возвращает все элементы по названию столбца.
-        /// </summary>
-        /// <param name="column_name">Название столбца.</param>
-        /// <returns>Коллекция элементов таблицы <see cref="DbColumn"/>.</returns>
         public DbColumn this[string column_name]
         {
             get
@@ -153,6 +147,7 @@ namespace System.Data.Common
                 return this.GetColumn(column_name);
             }
         }
+        */
 
         /// <summary>
         /// Количество строк в таблице.
@@ -162,9 +157,12 @@ namespace System.Data.Common
             get => this.Rows.Count;
         }
 
+        /// <summary>
+        /// Количество столбцов в таблице.
+        /// </summary>
         public int ColumnsCount
         {
-            get => this.columns.Count;
+            get => this.Columns.Length;
         }
 
         /// <summary>
@@ -182,39 +180,136 @@ namespace System.Data.Common
         /// <param name="closeData">Нужно ли вызвать для <paramref name="data"/> метод <see cref="DbDataReader.Close"/>; true, если нужно вызвать.</param>
         public DbResult(DbDataReader data, bool closeData = true)
         {
-            this.ColumnTypes = new List<Type>();
-            this.columns = new List<string>();
-            this.Rows = new List<List<object>>();
+            this.index = -1;
+            this.ColumnTypes = new Type[0];
+            this.Columns = new string[0];
+            this.Rows = new List<object[]>();
+
             if (data.HasRows)
             {
+                bool init = false;
+                bool init_column = false;
                 while (data.Read())
                 {
-                    List<object> tmp_row = new List<object>();
                     int countCols = data.FieldCount;
+
+                    if (!init)
+                    {
+                        this.ColumnTypes = new Type[countCols];
+                        this.Columns = new string[countCols];
+                        this.Rows = new List<object[]>();
+
+                        init = true;
+                    }
+
+                    object[] tmp_row = new object[countCols];
+
+                    
                     for (int i = 0; i < countCols; i++)
                     {
-                        if(this.ColumnsCount < countCols)
+                        if(!init_column)
                         {
-                            this.columns.Add(data.GetName(i));
-                            this.ColumnTypes.Add(data.GetFieldType(i));
+                            this.Columns[i] = data.GetName(i);
+                            this.ColumnTypes[i] = data.GetFieldType(i);
                         }
-                        tmp_row.Add(data.GetValue(i));
+                        tmp_row[i] = data.GetValue(i);
                     }
                     this.Rows.Add(tmp_row);
+                    if (!init_column) init_column = true;
                 }
             }
             if(closeData) data.Close();
         }
 
-        private DbResult(IEnumerable<string> columns, IEnumerable<Type> columnTypes, IEnumerable<List<object>> rows)
+        /*
+        private DbResult(IEnumerable<string> columns, IEnumerable<Type> columnTypes, IEnumerable<object[]> rows)
         {
-            this.columns = new List<string>(columns);
-            this.ColumnTypes = new List<Type>(columnTypes);
-            this.Rows = new List<List<object>>(rows);
+            this.index = -1;
+            this.Columns = columns.ToArray();
+            this.ColumnTypes = columnTypes.ToArray();
+            this.Rows = rows.ToList();
+        }
+        */
+
+        #region DataTable
+        /// <summary>
+        /// Считывает один или несколько прямонаправленных потоков наборов результатов и создает на основе полученных данных экземпляр класса <see cref="DataTable"/>.
+        /// </summary>
+        /// <param name="data">Данные для считывания.</param>
+        /// <param name="closeData">Нужно ли вызвать для <paramref name="data"/> метод <see cref="DbDataReader.Close"/>; true, если нужно вызвать.</param>
+        /// <returns>Таблица данных.</returns>
+        public static DataTable ToDataTable(DbDataReader data, bool closeData = true)
+        {
+            DataTable result = new DataTable();
+
+            if (data.HasRows)
+            {
+                bool getColumn = false;
+                while (data.Read())
+                {
+                    if (!getColumn)
+                    {
+                        for (int i = 0; i < data.FieldCount; i++)
+                        {
+                            result.Columns.Add(new DataColumn(data.GetName(i), data.GetFieldType(i)));
+                        }
+                        getColumn = true;
+                    }
+
+                    DataRow newRow = result.NewRow();
+                    for(int i = 0; i < data.FieldCount; i++)
+                    {
+                        newRow[i] = data.GetValue(i);
+                    }
+                    result.Rows.Add(newRow);
+                }
+            }
+            if (closeData) data.Close();
+            return result;
         }
 
         /// <summary>
-        /// Получает элемент таблицы по номеру столбца и номеру строки.
+        /// Считывает <see cref="DbResult"/> и создает на его основе экземпляр класса <see cref="DataTable"/>.
+        /// </summary>
+        /// <param name="data">Данные для считывания.</param>
+        /// <returns>Таблица данных.</returns>
+        public static DataTable ToDataTable(DbResult data)
+        {
+            DataTable result = new DataTable();
+
+            if (data.HasRows)
+            {
+                for (int i = 0; i < data.ColumnsCount; i++)
+                {
+                    result.Columns.Add(new DataColumn(data.Columns[i], data.ColumnTypes[i]));
+                }
+
+                for (int i = 0; i < data.RowsCount; i++)
+                {
+                    DataRow newRow = result.NewRow();
+                    for(int j = 0; j < data.ColumnsCount; j++)
+                    {
+                        newRow[j] = data.GetObject(j, i);
+                    }
+                    result.Rows.Add(newRow);
+                }   
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Конвертирует текущий объект в экземпляр класса <see cref="DataTable"/>.
+        /// </summary>
+        /// <returns>Таблица данных.</returns>
+        public DataTable ToDataTable()
+        {
+            return ToDataTable(this);
+        }
+        #endregion
+       
+        /// <summary>
+        /// Возвращает объект по номеру столбца и номеру строки.
         /// </summary>
         /// <param name="column">Номер столбца.</param>
         /// <param name="row">Номер строки.</param>
@@ -224,92 +319,128 @@ namespace System.Data.Common
             return this.Rows[row][column];
         }
 
+        /// <summary>
+        /// Пытается конвертировать объект в <see cref="int"/> и возвращает результат.
+        /// </summary>
+        /// <param name="column">Номер столбца.</param>
+        /// <param name="row">Номер строки.</param>
+        /// <returns>Элемент таблицы.</returns>
         public int GetInt32(int column, int row)
         {
             return Convert.ToInt32(this.GetObject(column, row));
         }
 
+        /// <summary>
+        /// Пытается конвертировать объект в <see cref="int"/> и возвращает результат.
+        /// </summary>
+        /// <param name="column_name">Название столбца.</param>
+        /// <param name="row">Номер строки.</param>
+        /// <returns>Элемент таблицы.</returns>
         public int GetInt32(string column_name, int row)
         {
             return Convert.ToInt32(this.GetObject(column_name, row));
         }
 
+        /// <summary>
+        /// Пытается конвертировать объект в <see cref="double"/> и возвращает результат.
+        /// </summary>
+        /// <param name="column">Номер столбца.</param>
+        /// <param name="row">Номер строки.</param>
+        /// <returns>Элемент таблицы.</returns>
         public double GetDouble(int column, int row)
         {
             return Convert.ToDouble(this.GetObject(column, row));
         }
 
+        /// <summary>
+        /// Пытается конвертировать объект в <see cref="double"/> и возвращает результат.
+        /// </summary>
+        /// <param name="column_name">Название столбца.</param>
+        /// <param name="row">Номер строки.</param>
+        /// <returns>Элемент таблицы.</returns>
         public double GetDouble(string column_name, int row)
         {
             return Convert.ToDouble(this.GetObject(column_name, row));
         }
 
+        /// <summary>
+        /// Пытается конвертировать объект в <see cref="bool"/> и возвращает результат.
+        /// </summary>
+        /// <param name="column">Номер столбца.</param>
+        /// <param name="row">Номер строки.</param>
+        /// <returns>Элемент таблицы.</returns>
         public bool GetBoolean(int column, int row)
         {
             return Convert.ToBoolean(this.GetObject(column, row));
         }
 
+        /// <summary>
+        /// Пытается конвертировать объект в <see cref="bool"/> и возвращает результат.
+        /// </summary>
+        /// <param name="column_name">Название столбца.</param>
+        /// <param name="row">Номер строки.</param>
+        /// <returns>Элемент таблицы.</returns>
         public bool GetBoolean(string column_name, int row)
         {
             return Convert.ToBoolean(this.GetObject(column_name, row));
         }
 
         /// <summary>
-        /// Получает элемент таблицы по названию столбца и номеру строки.
+        /// Возвращает объект по названию столбца и номеру строки.
         /// </summary>
         /// <param name="column_name">Название столбца.</param>
         /// <param name="row">Номер строки.</param>
         /// <returns>Элемент таблицы.</returns>
         public object GetObject(string column_name, int row)
         {
-            int column = this.columns.IndexOf(column_name);
+            int column = Array.IndexOf(this.Columns, column_name);
             return this.Rows[row][column];
         }
 
         /// <summary>
-        /// Возвращает элемент таблицы в формате <see cref="DbValue"/> по номеру столбца и номеру строки.
+        /// Создает элемент таблицы в формате <see cref="DbValue"/> по номеру столбца и номеру строки.
         /// </summary>
         /// <param name="column">Номер столбца.</param>
         /// <param name="row">Номер строки.</param>
         /// <returns>Элемент таблицы.</returns>
         public DbValue GetValue(int column, int row)
         {
-            return new DbValue(this.ColumnTypes[column], this.Rows[row][column], row, this.columns[column]);
+            return new DbValue(this.ColumnTypes[column], this.Rows[row][column], row, this.Columns[column]);
         }
 
         /// <summary>
-        /// Возвращает элемент таблицы в формате <see cref="DbValue"/> по названию столбца и номеру строки.
+        /// Создает элемент таблицы в формате <see cref="DbValue"/> по названию столбца и номеру строки.
         /// </summary>
         /// <param name="column_name">Название столбца.</param>
         /// <param name="row">Номер строки.</param>
         /// <returns>Элемент таблицы.</returns>
         public DbValue GetValue(string column_name, int row)
         {
-            int column = this.columns.IndexOf(column_name);
+            int column = Array.IndexOf(this.Columns, column_name);
             return new DbValue(this.ColumnTypes[column], this.Rows[row][column], row, column_name);
         }
 
         /// <summary>
-        /// Возвращает все элементы по номеру строки.
+        /// Находит строку по номеру и создает на её основе объект <see cref="DbRow"/>.
         /// </summary>
         /// <param name="row">Номер строки.</param>
-        /// <returns>Коллекция элементов таблицы <see cref="DbRow"/>.</returns>
+        /// <returns>Строка в формате <see cref="DbRow"/>.</returns>
         public DbRow GetRow(int row)
         {
             return new DbRow(row, this.Rows[row], this.Columns, this.ColumnTypes);
         }
 
         /// <summary>
-        /// Возвращает все элементы по номеру столбца.
+        /// Находит столбец по номеру и создает на его основе объект <see cref="DbColumn"/>.
         /// </summary>
         /// <param name="column">Номер столбца.</param>
-        /// <returns>Коллекция элементов таблицы <see cref="DbColumn"/>.</returns>
+        /// <returns>Столбец в формате <see cref="DbColumn"/>.</returns>
         public DbColumn GetColumn(int column)
         {
             string column_name = this.Columns.ElementAt(column);
             Type type = this.GetColumnType(column);
             List<object> tmp_values = new List<object>();
-            foreach (List<object> tmp_row in this.Rows)
+            foreach (object[] tmp_row in this.Rows)
             {
                 tmp_values.Add(tmp_row[column]);
             }
@@ -317,16 +448,16 @@ namespace System.Data.Common
         }
 
         /// <summary>
-        /// Возвращает все элементы по названию столбца.
+        /// Находит столбец по названию и создает на его основе объект <see cref="DbColumn"/>.
         /// </summary>
         /// <param name="column_name">Название столбца.</param>
-        /// <returns>Коллекция элементов таблицы <see cref="DbColumn"/>.</returns>
+        /// <returns>Столбец в формате <see cref="DbColumn"/>.</returns>
         public DbColumn GetColumn(string column_name)
         {
-            int tmp_col_index = this.columns.IndexOf(column_name);
+            int tmp_col_index = Array.IndexOf(this.Columns, column_name);
             Type type = this.GetColumnType(tmp_col_index);
             List<object> tmp_values = new List<object>();
-            foreach(List<object> tmp_row in this.Rows)
+            foreach(object[] tmp_row in this.Rows)
             {
                 tmp_values.Add(tmp_row[tmp_col_index]);
             }
@@ -350,10 +481,8 @@ namespace System.Data.Common
         /// <returns>Тип данных выбранного столбца.</returns>
         public Type GetColumnType(string column_name)
         {
-            int column = this.columns.IndexOf(column_name);
+            int column = Array.IndexOf(this.Columns, column_name);
             return this.ColumnTypes[column];
         }
-
-    
     }
 }

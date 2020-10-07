@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace System.Data.Common
 {
@@ -7,7 +8,7 @@ namespace System.Data.Common
     {
         public string ColumnName { get; private set; }
         public Type ColumnType { get; private set; }
-        private List<object> Values;
+        private object[] Values;
 
         #region IEnumerable
 
@@ -27,7 +28,7 @@ namespace System.Data.Common
 
         public bool MoveNext()
         {
-            if (index == this.Values.Count - 1)
+            if (index == this.Values.Length - 1)
             {
                 this.Reset();
                 return false;
@@ -66,7 +67,7 @@ namespace System.Data.Common
 
         public int RowsCount
         {
-            get => this.Values.Count;
+            get => this.Values.Length;
         }
 
         public DbValue this[int row]
@@ -82,7 +83,7 @@ namespace System.Data.Common
             this.index = -1;
             this.ColumnName = name;
             this.ColumnType = type;
-            this.Values = new List<object>(values);
+            this.Values = values.ToArray();
         }
 
         public object GetObject(int row)

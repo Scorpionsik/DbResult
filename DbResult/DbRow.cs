@@ -1,22 +1,32 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace System.Data.Common
 {
     public struct DbRow : IEnumerable<DbValue>, IEnumerator<DbValue>
     {
+        /// <summary>
+        /// Номер текущей строки в базе данных.
+        /// </summary>
         public int RowIndex { get; private set; }
 
-        private List<string> column;
-        public string[] Column
-        {
-            get => this.column.ToArray();
-        }
-        private List<Type> ColumnTypes;
-        private List<object> Values;
+        /// <summary>
+        /// Названия столбцов таблицы.
+        /// </summary>
+        public string[] Columns { get; private set; }
+
+        /// <summary>
+        /// Типы данных в столбцах таблицы.
+        /// </summary>
+        public Type[] ColumnTypes { get; private set; }
+
+        /// <summary>
+        /// Значения в строке.
+        /// </summary>
+        private object[] Values;
 
         #region IEnumerable
-        
         IEnumerator<DbValue> IEnumerable<DbValue>.GetEnumerator()
         {
             return this;
@@ -31,9 +41,14 @@ namespace System.Data.Common
         #region IEnumerator
         private int index;
 
+        /// <summary>
+        /// Перемещает перечислитель к следующему элементу коллекции строк таблицы.
+        /// </summary>
+        /// <returns>Значение true, если перечислитель был успешно перемещен к следующему элементу; значение false, если перечислитель достиг конца коллекции.</returns>
+        /// <exception cref="InvalidOperationException">Коллекция была изменена после создания перечислителя.</exception>
         public bool MoveNext()
         {
-            if (index == this.Values.Count - 1)
+            if (index == this.Values.Length - 1)
             {
                 this.Reset();
                 return false;
@@ -43,16 +58,26 @@ namespace System.Data.Common
             return true;
         }
 
+        /// <summary>
+        /// Необходим для реализации интерфейса <see cref="IDisposable"/>, не используется в этом классе.
+        /// </summary>
         public void Dispose()
         {
 
         }
 
+        /// <summary>
+        /// Устанавливает перечислитель в его начальное положение, т. е. перед первым элементом коллекции.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Коллекция была изменена после создания перечислителя.</exception>
         public void Reset()
         {
             index = -1;
         }
 
+        /// <summary>
+        /// Возвращает элемент коллекции, соответствующий текущей позиции перечислителя.
+        /// </summary>
         public object Current
         {
             get
@@ -69,20 +94,29 @@ namespace System.Data.Common
             }
         }
         #endregion
-
-        public DbValue this[int column]
+        /// <summary>
+        /// Возвращает элемент строки по номеру столбца.
+        /// </summary>
+        /// <param name="column">Номер столбца.</param>
+        /// <returns>Элемент таблицы.</returns>
+        public object this[int column]
         {
             get
             {
-                return this.GetValue(column);
+                return this.GetObject(column);
             }
         }
 
-        public DbValue this[string column_name]
+        /// <summary>
+        /// Возвращает элемент строки по названию столбца.
+        /// </summary>
+        /// <param name="column_name">Название столбца.</param>
+        /// <returns>Элемент таблицы.</returns>
+        public object this[string column_name]
         {
             get
             {
-                return this.GetValue(column_name);
+                return this.GetObject(column_name);
             }
         }
 
@@ -90,19 +124,29 @@ namespace System.Data.Common
         {
             this.index = -1;
             this.RowIndex = row_index;
-            this.column = new List<string>(columns);
-            this.Values = new List<object>(values);
-            this.ColumnTypes = new List<Type>(columnTypes);
+            this.Columns = columns.ToArray();
+            this.Values = values.ToArray();
+            this.ColumnTypes = columnTypes.ToArray();
         }
 
+        /// <summary>
+        /// Возвращает элемент строки по номеру столбца.
+        /// </summary>
+        /// <param name="column">Номер столбца.</param>
+        /// <returns>Элемент таблицы.</returns>
         public object GetObject(int column)
         {
             return this.Values[column];
         }
 
+        /// <summary>
+        /// Возвращает элемент строки по названию столбца.
+        /// </summary>
+        /// <param name="column_name">Название столбца.</param>
+        /// <returns>Элемент таблицы.</returns>
         public object GetObject(string column_name)
         {
-            int column = this.column.IndexOf(column_name);
+            int column = Array.IndexOf(this.Columns, column_name);
             return this.Values[column];
         }
 
@@ -138,12 +182,12 @@ namespace System.Data.Common
 
         public DbValue GetValue(int column)
         {
-            return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, this.column[column]);
+            return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, this.Columns[column]);
         }
 
         public DbValue GetValue(string column_name)
         {
-            int column = this.column.IndexOf(column_name);
+            int column = Array.IndexOf(this.Columns, column_name);
             return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, column_name);
         }
 
@@ -154,7 +198,7 @@ namespace System.Data.Common
 
         public Type GetColumnType(string column_name)
         {
-            int column = this.column.IndexOf(column_name);
+            int column = Array.IndexOf(this.Columns, column_name);
             return this.ColumnTypes[column];
         }
     }
