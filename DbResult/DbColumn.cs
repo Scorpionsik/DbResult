@@ -74,7 +74,7 @@ namespace System.Data.Common
         {
             get
             {
-                return new DbValue(this.ColumnType, this.Values[row], row, this.ColumnName);
+                return this.GetValue(row);
             }
         }
 
