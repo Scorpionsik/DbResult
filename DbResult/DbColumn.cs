@@ -8,7 +8,7 @@ namespace System.Data.Common
     {
         public string ColumnName { get; private set; }
         public Type ColumnType { get; private set; }
-        private object[] Values;
+        private DbValue[] Values;
 
         #region IEnumerable
 
@@ -78,7 +78,7 @@ namespace System.Data.Common
             }
         }
 
-        internal DbColumn(string name, Type type, IEnumerable<object> values)
+        internal DbColumn(string name, Type type, IEnumerable<DbValue> values)
         {
             this.index = -1;
             this.ColumnName = name;
@@ -88,12 +88,12 @@ namespace System.Data.Common
 
         public object GetObject(int row)
         {
-            return this.Values[row];
+            return this.Values[row].Value;
         }
 
         public DbValue GetValue(int row)
         {
-            return new DbValue(this.ColumnType, this.Values[row], row, this.ColumnName);
+            return this.Values[row];
         }
     }
 }

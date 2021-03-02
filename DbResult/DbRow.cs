@@ -24,7 +24,7 @@ namespace System.Data.Common
         /// <summary>
         /// Значения в строке.
         /// </summary>
-        private object[] Values;
+        private DbValue[] Values;
 
         #region IEnumerable
         IEnumerator<DbValue> IEnumerable<DbValue>.GetEnumerator()
@@ -99,11 +99,11 @@ namespace System.Data.Common
         /// </summary>
         /// <param name="column">Номер столбца.</param>
         /// <returns>Элемент таблицы.</returns>
-        public object this[int column]
+        public DbValue this[int column]
         {
             get
             {
-                return this.GetObject(column);
+                return this.GetValue(column);
             }
         }
 
@@ -112,15 +112,15 @@ namespace System.Data.Common
         /// </summary>
         /// <param name="column_name">Название столбца.</param>
         /// <returns>Элемент таблицы.</returns>
-        public object this[string column_name]
+        public DbValue this[string column_name]
         {
             get
             {
-                return this.GetObject(column_name);
+                return this.GetValue(column_name);
             }
         }
 
-        internal DbRow(int row_index, IEnumerable<object> values, IEnumerable<string> columns, IEnumerable<Type> columnTypes)
+        internal DbRow(int row_index, IEnumerable<DbValue> values, IEnumerable<string> columns, IEnumerable<Type> columnTypes)
         {
             this.index = -1;
             this.RowIndex = row_index;
@@ -136,7 +136,7 @@ namespace System.Data.Common
         /// <returns>Элемент таблицы.</returns>
         public object GetObject(int column)
         {
-            return this.Values[column];
+            return this.Values[column].Value;
         }
 
         /// <summary>
@@ -147,48 +147,48 @@ namespace System.Data.Common
         public object GetObject(string column_name)
         {
             int column = Array.IndexOf(this.Columns, column_name);
-            return this.Values[column];
+            return this.Values[column].Value;
         }
 
         public int GetInt32(int column)
         {
-            return Convert.ToInt32(this.GetObject(column));
+            return this.GetValue(column).ToInt32();
         }
 
         public int GetInt32(string column_name)
         {
-            return Convert.ToInt32(this.GetObject(column_name));
+            return this.GetValue(column_name).ToInt32();
         }
 
         public double GetDouble(int column)
         {
-            return Convert.ToDouble(this.GetObject(column));
+            return this.GetValue(column).ToDouble();
         }
 
         public double GetDouble(string column_name)
         {
-            return Convert.ToDouble(this.GetObject(column_name));
+            return this.GetValue(column_name).ToDouble();
         }
 
         public bool GetBoolean(int column)
         {
-            return Convert.ToBoolean(this.GetObject(column));
+            return this.GetValue(column).ToBoolean();
         }
 
         public bool GetBoolean(string column_name)
         {
-            return Convert.ToBoolean(this.GetObject(column_name));
+            return this.GetValue(column_name).ToBoolean();
         }
 
         public DbValue GetValue(int column)
         {
-            return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, this.Columns[column]);
+            return this.Values[column];
         }
 
         public DbValue GetValue(string column_name)
         {
             int column = Array.IndexOf(this.Columns, column_name);
-            return new DbValue(this.ColumnTypes[column], this.Values[column], this.RowIndex, column_name);
+            return this.Values[column];
         }
 
         public Type GetColumnType(int column)
